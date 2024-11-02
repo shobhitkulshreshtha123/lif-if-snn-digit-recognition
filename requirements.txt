@@ -3,3 +3,5 @@ torch
 Pillow
 torchvision
 snntorch
+gunicorn
+
