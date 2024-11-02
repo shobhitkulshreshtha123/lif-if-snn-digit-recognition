@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import base64
 from io import BytesIO
+import os
 
 app = Flask(__name__)
 
@@ -105,17 +106,6 @@ def load_model(model_choice):
     model.eval()
     return model
 
-# Image preprocessing function with fixed rotation
-# def preprocess_image(image, rotation):
-#     transform = transforms.Compose([
-#         transforms.Grayscale(num_output_channels=1),
-#         transforms.Resize((28, 28)),
-#         transforms.Lambda(lambda img: transforms.functional.rotate(img, rotation)),  # Use single angle
-#         transforms.ToTensor(),
-#         transforms.Normalize((0.5,), (0.5,))
-#     ])
-#     return transform(image).unsqueeze(0)  # Add batch dimension
-
 
 def preprocess_image(image, rotation_range):
     # Random rotation within the specified range
@@ -144,38 +134,6 @@ def encode_image(image):
 @app.route('/')
 def index():
     return render_template('index.html')
-
-# @app.route('/predict', methods=['POST'])
-# def predict():
-#     print("Received request on /predict")  # Debug print
-
-#     model_choice = request.form.get("model_choice")
-#     print("Model choice:", model_choice)  # Debug print
-
-#     rotation = int(request.form.get("rotation", 0))  # Get rotation as a single integer
-#     file = request.files.get('file')
-#     print("File received:", file is not None)  # Debug print
-
-#     if not file or model_choice not in MODEL_PATHS:
-#         print("Invalid input")  # Debug print
-#         return jsonify({"error": "Invalid input"}), 400
-
-#     # Load the selected model
-#     model = load_model(model_choice)
-
-#     # Preprocess the uploaded image
-#     image = Image.open(io.BytesIO(file.read()))
-#     processed_image = preprocess_image(image, rotation)  # Pass single integer rotation
-#     print("Image processed")  # Debug print
-
-#     # Run the model on the processed image
-#     with torch.no_grad():
-#         _, output = model(processed_image)  # Unpack the output tuple to get spikes2
-#         # prediction = output.mean(dim=0).argmax(dim=1).item()  # Get the predicted digit
-#         prediction = output.sum(dim=0).argmax(dim=1).item()
-        
-
-#     return jsonify({"prediction": prediction})
 
 
 @app.route('/predict', methods=['POST'])
@@ -215,4 +173,5 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host= "0.0.0.0", port= port, debug=True)
