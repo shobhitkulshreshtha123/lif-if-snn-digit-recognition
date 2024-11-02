@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Recognition</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0000, #3d0c47);
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin: 1em 0;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+            /* Transparent background */
+            background: rgba(0, 0, 0, 0);
+        }
+
+        .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        label {
+            font-size: 1.2em;
+        }
+
+        select, input[type="file"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            margin-left: 10px;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: #9a03fe;
+            border: none;
+            color: white;
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #b829ff;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .image-container img {
+            width: 100px;
+            height: 100px;
+            margin: 0 10px;
+            border: 2px solid #9a03fe;
+            border-radius: 8px;
+        }
+
+        .image-container div {
+            text-align: center;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        .result {
+            font-size: 1.2em;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Digit Recognition</h1>
+    <div class="container">
+        <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="model_choice">Choose Model:</label>
+                <select name="model_choice" id="model_choice">
+                    <option value="IF">IF</option>
+                    <option value="LIF">LIF</option>
+                    <option value="IFLIF">IFLIF</option>
+                    <option value="LIFIF">LIFIF</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="rotation">Rotation Angle:</label>
+                <select name="rotation" id="rotation">
+                    <option value="0">0 degrees</option>
+                    <option value="20">20 degrees</option>
+                    <option value="30">30 degrees</option>
+                    <option value="40">40 degrees</option>
+                    <option value="50">50 degrees</option>
+                    <option value="60">60 degrees</option>
+                    <option value="70">70 degrees</option>
+                    <option value="80">80 degrees</option>
+                    <option value="90">90 degrees</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <input type="file" name="file" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Upload and Predict</button>
+                <button type="button" id="resetButton">Reset</button>
+            </div>
+        </form>
+
+        <div class="image-container">
+            <div>
+                <p>Uploaded Image</p>
+                <img id="originalImage" src="#" alt="Original Image" style="display: none;">
+            </div>
+            <div>
+                <p>Uploaded Image Rotated by <span id="rotationDegrees">__</span> degrees</p>
+                <img id="rotatedImage" src="#" alt="Rotated Image" style="display: none;">
+            </div>
+        </div>
+
+        <div class="result" id="resultText"></div>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").onsubmit = async function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            document.getElementById("resultText").textContent = "Predicting...";
+
+            const response = await fetch("/predict", { method: "POST", body: formData });
+            const result = await response.json();
+
+            if (result.error) {
+                document.getElementById("resultText").textContent = "Error: " + result.error;
+            } else {
+                document.getElementById("resultText").textContent = 
+                    "Uploaded image is predicted as " + result.prediction + 
+                    " with a test angle of " + result.rotation_angle.toFixed(2) + " degrees.";
+
+                document.getElementById("originalImage").src = URL.createObjectURL(formData.get("file"));
+                document.getElementById("originalImage").style.display = "block";
+                document.getElementById("rotatedImage").src = result.rotated_image_url;
+                document.getElementById("rotatedImage").style.display = "block";
+                document.getElementById("rotationDegrees").textContent = result.rotation_angle.toFixed(2);
+            }
+        };
+
+        document.getElementById("resetButton").onclick = function() {
+            document.getElementById("uploadForm").reset();
+            document.getElementById("resultText").textContent = "";
+            document.getElementById("originalImage").style.display = "none";
+            document.getElementById("rotatedImage").style.display = "none";
+        };
+    </script>
+
+</body>
+</html>
